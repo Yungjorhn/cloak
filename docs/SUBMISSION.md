@@ -4,7 +4,7 @@ Copy these into the OPEN//BUILD form and edit to your own voice. Fill in the bla
 
 **Project name:** CLOAK
 
-**Team:** ___ (University of ___), ___ (University of ___)
+**Team:** Favour Akinyeye (Obafemi Awolowo University), Samuel Oluwatuyi (Obafemi Awolowo University)
 
 **Problem statement:**
 Young Nigerians increasingly buy clothes from vendors on Instagram, WhatsApp and TikTok. Buyers pay
