@@ -125,3 +125,15 @@ def test_moodboard_filters_by_garment_type():
     assert moodboard_html(looks, "All").count('class="ck-look"') == 2
     assert moodboard_html(looks, "Dresses").count('class="ck-look"') == 1
     assert "No bottoms yet" in moodboard_html(looks, "Bottoms")
+
+
+def test_downloads_are_written_and_cleaned_up():
+    from pathlib import Path
+    from cloak.downloads import before_after_image, delete_look_files, save_look_files
+    pair = before_after_image(person(), garment())
+    assert pair.width > pair.height  # side by side
+    files = save_look_files(3, person(), garment())
+    assert Path(files["look"]).name == "cloak-look-03.jpg"
+    assert all(Path(p).exists() for p in files.values())
+    delete_look_files([{"files": files}])
+    assert not any(Path(p).exists() for p in files.values())
