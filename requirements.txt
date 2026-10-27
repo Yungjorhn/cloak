@@ -1,0 +1,19 @@
+# Tested together on Python 3.13 (Oct 2026). torch / torchvision are NOT listed:
+# use the GPU build that Google Colab (or your machine) already has.
+diffusers==0.42.1
+gradio==6.30.0
+huggingface_hub>=1.0
+accelerate>=1.0
+onnxruntime>=1.18
+fvcore>=0.1.5
+iopath>=0.1.10
+pycocotools>=2.0
+omegaconf>=2.3
+einops>=0.8
+cloudpickle>=3.0
+av>=12
+matplotlib>=3.8
+opencv-python-headless>=4.9
+scikit-image>=0.22
+numpy
+pillow
