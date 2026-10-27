@@ -18,7 +18,7 @@ try-on model generates an image of the user wearing the full outfit. Every look 
 moodboard that shows each new look next to the original photo, so the user can compare combinations before buying. It runs on a free Google
 Colab GPU.
 
-**GitHub repository:** https://github.com/___/cloak
+**GitHub repository:** github.com/Yungjorhn/cloak
 
 **Working demonstration:** ___ (demo video link) and the Colab notebook in the repo for running it live.
 
