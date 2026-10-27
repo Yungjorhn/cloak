@@ -8,7 +8,7 @@ them on your moodboard, each new look next to the photo you started from, before
 
 Built for **OPEN//BUILD 2026** (OSCA Ile-Ife Hacktoberfest Challenge).
 
-- **Live demo:** _add your gradio.live link or demo video here_
+- **Live demo:** _(https://drive.google.com/drive/folders/1JEB_axRbhCDVkyE2YizFVtCt0V-WmF1Z)_
 - **Run it yourself (free, no install):** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Yungjorhn/cloak/blob/main/notebooks/CLOAK_Colab.ipynb)  
   Click the button, set `Runtime > Change runtime type > T4 GPU`, then `Runtime > Run all`.
 
