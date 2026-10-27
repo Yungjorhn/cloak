@@ -133,6 +133,16 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
   with memory-mapping. Measured peak RAM for building one model dropped to about 4.3 GB, with an
   identical final model. See `TryOnEngine._build_leffa`.
 - **Only the checkpoints we need.** `setup.sh` skips Leffa's pose-transfer and SDXL weights.
+- **The person stays exactly as photographed.** The diffusion model redraws the *whole* image through
+  its compressor, which subtly changes faces, hands and backgrounds (we saw this in testing). CLOAK
+  takes only the clothing area from the model and keeps every other pixel from the original photo,
+  at full resolution, with a softened seam. See `blend_clothing_only`.
+- **Zoom in on the person.** The model works on a 768x1024 portrait canvas, so in a wide or distant
+  photo the person would be small and low-detail. CLOAK finds the person with the human-parsing
+  model, crops a portrait frame around them, runs the try-on, then places the result back into the
+  full photo. See `portrait_frame` and `TryOnEngine._person_frame`.
+- **Real progress.** The progress bar reads the model's own step counter (e.g. "step 19/30") by
+  wrapping Leffa's progress bar from the outside, without editing Leffa's code.
 - **Garment routing.** Tops go to the VITON-HD model (best quality). Bottoms and dresses go to the
   DressCode model, the only one trained on them.
 - **Layering order.** Bottom first, then top, so the top is generated over the trousers or skirt.
@@ -148,6 +158,12 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
 - **Training data bias.** The try-on models were trained on fashion catalogue photos from Western
   datasets. Very loose native styles (agbada, wide bubu), layered outfits and some skin tones may come
   out less accurately. We think fine-tuning on Nigerian fashion photos is the most important next step.
+- **Cut and length follow your current outfit (found in our testing).** The model repaints the area
+  your current clothes cover. Colour, fabric, print and neckline transfer well, and sleeves adapt.
+  But if your current top is *longer* than the new one, the bottom of the old top can show through,
+  and loose or boxy cuts come out more fitted. Photos in a fitted or tucked-in top work best.
+- **Use "Dress / gown" for full-length items.** A gown placed in the Top slot only repaints the upper
+  body, so it comes out as a blouse.
 - **Input quality matters.** Best results come from a front-facing photo with arms by your sides and a
   clean product image. Busy screenshots, models in unusual poses and side views give weaker results.
 - **Not covered:** caps, shoes, bags, glasses and hair.
@@ -188,8 +204,8 @@ evaluation on Nigerian fashion photos.
 
 ## Team
 
-- _Favour Akinyeye_, _Obafemi Awolowo University_
-- _Samuel Oluwatuyi_, _Obafemi Awolowo University_
+- _Favour (your surname)_, _University_
+- _Teammate name_, _University_
 
 ## Licence
 

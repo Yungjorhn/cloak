@@ -54,7 +54,7 @@ def run_tryon(person, mode, top, bottom, dress, quality, seed, looks,
         if top is None and bottom is None:
             raise gr.Error("Add a top, a bottom, or both.")
 
-    progress(0, desc="Reading your photo...")
+    progress(0, desc="Preparing your photo")
     t0 = time.time()
     try:
         result, log = get_engine().dress_outfit(
@@ -161,7 +161,9 @@ def build_ui():
         mode.change(switch_mode, inputs=mode, outputs=[two_piece_col, dress_col])
         go.click(run_tryon,
                  inputs=[person, mode, top, bottom, dress, quality, seed, looks],
-                 outputs=[result, looks, board, status])
+                 outputs=[result, looks, board, status],
+                 # show the progress bar on the result panel only, not on every output
+                 **supported(go.click, show_progress_on=[result]))
         clear.click(clear_board, outputs=[looks, board])
 
     return demo, theme

@@ -1,0 +1,20 @@
+# Downloaded by setup.sh (large, third-party)
+third_party/
+ckpts/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# Gradio / outputs
+.gradio/
+flagged/
+outputs/
+
+# Secrets and personal photos: never commit these
+.env
+*.key
+my_photos/
