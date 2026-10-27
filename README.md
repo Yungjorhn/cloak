@@ -123,10 +123,11 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
 
 - **Gradio for the interface.** It gives a working web app with webcam upload, a public share link and
   a queue in a few hundred lines of Python, which kept our 5-day effort on the AI pipeline.
-- **A custom design on top of Gradio.** A fashion-editorial look (serif display type, generous space)
-  on a sleek dark interface (monospace labels, one lime accent), defined in `cloak/ui_style.py`. It
-  adapts to Gradio's version and to phone screens. The moodboard is rendered as HTML so each look can
-  show the original photo and the new look side by side.
+- **A custom design on top of Gradio.** A clean, light editorial layout (cream paper, serif headlines,
+  rounded cards, a three-step flow) with youthful accents (a purple highlight, a lime **CLOAK IT** button,
+  soft pink-to-lavender gradients), defined in `cloak/ui_style.py`. It adapts to Gradio's version and to
+  phone screens. The moodboard is rendered as HTML so each look shows the original photo and the new
+  look side by side, and it can be filtered by tops, bottoms and dresses.
 - **Memory-safe loading for free Colab.** Each Leffa model has about 1.8 billion parameters. Built the
   default way (float32 first, then converted), one model needs over 7 GB of RAM before its weights load,
   enough to crash a free Colab session. CLOAK creates the model directly in float16 and reads weights

@@ -11,8 +11,8 @@ import time
 import gradio as gr
 
 from cloak.engine import CKPT_DIR, MOCK, TryOnEngine, load_image
-from cloak.ui_style import (CSS, FONTS_HEAD, FOOTER, HEADER, build_theme,
-                            moodboard_html, step, supported, to_data_uri)
+from cloak.ui_style import (CSS, FONTS_HEAD, HOW, board_head, build_theme, card_head,
+                            header_html, moodboard_html, section_head, supported, to_data_uri)
 
 GR_MAJOR = int(gr.__version__.split(".")[0])
 QUALITY = {"Fast": 20, "Balanced": 30, "Best": 50}
@@ -41,10 +41,10 @@ def image_input(placeholder, height, sources=("upload", "clipboard"), **extra):
     return gr.Image(**kwargs)
 
 
-def run_tryon(person, mode, top, bottom, dress, quality, seed, looks,
+def run_tryon(person, mode, top, bottom, dress, quality, seed, looks, board_filter,
               progress=gr.Progress()):
     if person is None:
-        raise gr.Error("Add a photo of yourself first (step 01).")
+        raise gr.Error("Add a photo of yourself first (step 1).")
     if mode == "Dress / gown":
         top = bottom = None
         if dress is None:
@@ -77,7 +77,8 @@ def run_tryon(person, mode, top, bottom, dress, quality, seed, looks,
     status = f"Look {look['no']:02d} ready · {time.time() - t0:.0f}s · " + " · ".join(log)
     if MOCK:
         status = "MOCK MODE, NOT A REAL TRY-ON · " + status
-    return result, looks, moodboard_html(looks), status
+    return (result, looks, board_head(len(looks)),
+            moodboard_html(looks, board_filter), status)
 
 
 def switch_mode(mode):
@@ -86,7 +87,19 @@ def switch_mode(mode):
 
 
 def clear_board():
-    return [], moodboard_html([])
+    return [], board_head(0), moodboard_html([])
+
+
+def filter_board(looks, board_filter):
+    return moodboard_html(looks, board_filter)
+
+
+def hero_images():
+    """Use a sample person and garment for the hero picture when they exist."""
+    people, garments = example_files("person1", 1), example_files("garment", 2)
+    person = to_data_uri(load_image(people[0][0]), 720) if people else None
+    garment = to_data_uri(load_image(garments[-1][0]), 360) if garments else None
+    return person, garment
 
 
 def example_files(sub, n=6):
@@ -105,45 +118,46 @@ def build_ui():
 
     with gr.Blocks(**blocks_kwargs) as demo:
         looks = gr.State([])
-        H(HEADER)
+        H(header_html(*hero_images()))
+        H(section_head(active=3))
         if MOCK:
-            H('<p class="ck-kicker" style="margin-top:16px">Mock mode · results are '
-                    'placeholders for interface testing, not real try-ons</p>')
+            H('<div class="ck-mock">Mock mode: results are placeholders for interface testing, '
+              'not real try-ons.</div>')
 
         with gr.Row(equal_height=False):
-            # 01 ------------------------------------------------------------
-            with gr.Column(scale=1, min_width=300):
-                H(step("01", "You", "front-facing · arms down"))
-                person = image_input("Upload or snap a photo of yourself", 460,
+            # 1 ------------------------------------------------------------
+            with gr.Column(scale=1, min_width=300, elem_classes=["ck-card"]):
+                H(card_head(1, "Your photo", "Facing the camera, arms relaxed"))
+                person = image_input("Upload a photo or take one", 440,
                                      sources=("upload", "webcam"))
                 ex = example_files("person1")
                 if ex:
-                    gr.Examples(ex, inputs=person, label="Samples",
+                    gr.Examples(ex, inputs=person, label="Or pick a sample",
                                 **supported(gr.Examples.__init__, examples_per_page=6))
 
-            # 02 ------------------------------------------------------------
-            with gr.Column(scale=1, min_width=300):
-                H(step("02", "The outfit", "clean product shots"))
+            # 2 ------------------------------------------------------------
+            with gr.Column(scale=1, min_width=300, elem_classes=["ck-card"]):
+                H(card_head(2, "Choose your outfit", "Screenshots from a vendor's page work"))
                 mode = gr.Radio(["Top + bottom", "Dress / gown"], value="Top + bottom",
-                                show_label=False, elem_classes=["ck-mode"])
+                                show_label=False, elem_classes=["ck-tabs"])
                 with gr.Column(visible=True) as two_piece_col:
-                    H('<div class="ck-slot-label">Top · shirt, blouse, tee, jacket</div>')
-                    top = image_input("Drop the top here", 196)
-                    H('<div class="ck-slot-label">Bottom · trousers, skirt, shorts</div>')
-                    bottom = image_input("Drop the bottom here", 196)
+                    H('<div class="ck-slot">Top</div>')
+                    top = image_input("Shirt, blouse, tee or jacket", 180)
+                    H('<div class="ck-slot">Bottom</div>')
+                    bottom = image_input("Trousers, skirt or shorts", 180)
                 with gr.Column(visible=False) as dress_col:
-                    H('<div class="ck-slot-label">Dress · gown, long native outfit</div>')
-                    dress = image_input("Drop the dress here", 410)
+                    H('<div class="ck-slot">Dress</div>')
+                    dress = image_input("Gown, dress or long native outfit", 390)
                 exg = example_files("garment")
                 if exg:
-                    gr.Examples(exg, inputs=top, label="Sample tops",
+                    gr.Examples(exg, inputs=top, label="Or pick a sample top",
                                 **supported(gr.Examples.__init__, examples_per_page=6))
 
-            # 03 ------------------------------------------------------------
-            with gr.Column(scale=1, min_width=300):
-                H(step("03", "The look", "about 20 to 40 s"))
+            # 3 ------------------------------------------------------------
+            with gr.Column(scale=1, min_width=300, elem_classes=["ck-card"]):
+                H(card_head(3, "Your look", "Ready in about 20 to 40 seconds"))
                 result = gr.Image(**supported(
-                    gr.Image.__init__, type="pil", height=460, interactive=False,
+                    gr.Image.__init__, type="pil", height=440, interactive=False,
                     show_label=False, elem_classes=["ck-img"],
                     buttons=["download", "fullscreen"]))
                 go = gr.Button("CLOAK IT", variant="primary", elem_id="ck-go")
@@ -154,17 +168,23 @@ def build_ui():
                     seed = gr.Number(value=42, precision=0,
                                      label="Variation (change for a different take)")
 
+        board_title = H(board_head(0))
+        with gr.Row(equal_height=True):
+            board_filter = gr.Radio(["All", "Tops", "Bottoms", "Dresses"], value="All",
+                                    show_label=False, elem_classes=["ck-filters"], scale=4)
+            clear = gr.Button("Clear moodboard", variant="secondary", size="sm", scale=1,
+                              min_width=150)
         board = H(moodboard_html([]))
-        clear = gr.Button("Clear moodboard", variant="secondary", size="sm")
-        H(FOOTER)
+        H(HOW)
 
         mode.change(switch_mode, inputs=mode, outputs=[two_piece_col, dress_col])
         go.click(run_tryon,
-                 inputs=[person, mode, top, bottom, dress, quality, seed, looks],
-                 outputs=[result, looks, board, status],
+                 inputs=[person, mode, top, bottom, dress, quality, seed, looks, board_filter],
+                 outputs=[result, looks, board_title, board, status],
                  # show the progress bar on the result panel only, not on every output
                  **supported(go.click, show_progress_on=[result]))
-        clear.click(clear_board, outputs=[looks, board])
+        board_filter.change(filter_board, inputs=[looks, board_filter], outputs=board)
+        clear.click(clear_board, outputs=[looks, board_title, board])
 
     return demo, theme
 
