@@ -1,7 +1,5 @@
 # Submission form answers (draft)
 
-Copy these into the OPEN//BUILD form and edit to your own voice. Fill in the blanks marked `___`.
-
 **Project name:** CLOAK
 
 **Team:** Favour Akinyeye (Obafemi Awolowo University), Samuel Oluwatuyi (Obafemi Awolowo University)
