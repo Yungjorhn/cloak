@@ -61,7 +61,7 @@ replaces both in a single pass.
 
   | | |
   |---|---|
-  | ![](docs/result-1.jpg) | ![](docs/result-2.jpg) | ![](docs/result-3.jpg) | ![](docs/result-4.jpg) | ![](docs/result-5.jpg) | 
+  | ![](docs/result-1.jpg,jpg) | ![](docs/result-2.jpg.jpg) | ![](docs/result-3.jpg.jpg) | ![](docs/result-4.jpg.jpg) | ![](docs/result-5.jpg.jpg) | 
 
   What we learned from testing: colour, print, fabric and necklines transfer well, and
   sleeves adapt. Length follows the outfit in your photo, so photos in a fitted or tucked-in
