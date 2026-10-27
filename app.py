@@ -146,7 +146,7 @@ def build_ui():
                     gr.Image.__init__, type="pil", height=460, interactive=False,
                     show_label=False, elem_classes=["ck-img"],
                     buttons=["download", "fullscreen"]))
-                go = gr.Button("Try it on", variant="primary", elem_id="ck-go")
+                go = gr.Button("CLOAK IT", variant="primary", elem_id="ck-go")
                 status = gr.Markdown("", elem_classes=["ck-status"])
                 with gr.Accordion("Settings", open=False):
                     quality = gr.Radio(list(QUALITY), value="Balanced",
