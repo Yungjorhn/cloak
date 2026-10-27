@@ -9,7 +9,8 @@ them on your moodboard, each new look next to the photo you started from, before
 Built for **OPEN//BUILD 2026** (OSCA Ile-Ife Hacktoberfest Challenge).
 
 - **Live demo:** _add your gradio.live link or demo video here_
-- **Run it yourself:** [Open the Colab notebook](notebooks/CLOAK_Colab.ipynb) (free T4 GPU)
+- **Run it yourself (free, no install):** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Yungjorhn/cloak/blob/main/notebooks/CLOAK_Colab.ipynb)  
+  Click the button, set `Runtime > Change runtime type > T4 GPU`, then `Runtime > Run all`.
 
 > _Add a screenshot: `docs/screenshot.png`_
 
@@ -85,9 +86,12 @@ keypoints and DensePose body surface estimation.
 
 ### Option A: Google Colab (recommended, free)
 
-1. Open [`notebooks/CLOAK_Colab.ipynb`](notebooks/CLOAK_Colab.ipynb) in Colab.
+1. Click [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Yungjorhn/cloak/blob/main/notebooks/CLOAK_Colab.ipynb) (needs a free Google account). It opens
+   [`notebooks/CLOAK_Colab.ipynb`](notebooks/CLOAK_Colab.ipynb) directly in Colab.
 2. `Runtime > Change runtime type > T4 GPU`.
-3. Run the cells. The last one prints a public `https://....gradio.live` link.
+3. `Runtime > Run all`. If Colab warns the notebook wasn't written by Google, choose **Run anyway**.
+4. The last cell prints a public `https://....gradio.live` link. If clicking it shows a blank page,
+   copy the full link into a new tab.
 
 First run: about 5 to 10 minutes (downloads a few GB of weights). Each garment then takes roughly
 15 to 40 seconds on a T4, depending on the quality setting.
