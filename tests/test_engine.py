@@ -78,10 +78,10 @@ def test_moodboard_shows_before_and_after_for_each_look():
     looks = [{"no": i, "time": "10:00", "before": uri, "after": uri,
               "items": [("Top", to_data_uri(garment(), 120))]} for i in (1, 2)]
     page = moodboard_html(looks)
-    assert page.count('class="ck-card"') == 2
+    assert page.count('class="ck-look"') == 2
     assert page.count(">Before<") == 2 and page.count(">After<") == 2
     assert page.index("Look 02") < page.index("Look 01")  # newest first
-    assert "Nothing pinned yet" in moodboard_html([])
+    assert "moodboard is waiting" in moodboard_html([])
 
 
 def test_portrait_frame_zooms_in_on_a_small_person_in_a_wide_photo():
@@ -115,3 +115,13 @@ def test_result_keeps_the_original_photo_size(engine):
     wide = Image.new("RGB", (1600, 900), (90, 90, 90))
     out, _ = engine.dress_outfit(wide, top=garment())
     assert out.size == (1600, 900)
+
+
+def test_moodboard_filters_by_garment_type():
+    from cloak.ui_style import moodboard_html, to_data_uri
+    uri = to_data_uri(person())
+    looks = [{"no": 1, "time": "10:00", "before": uri, "after": uri, "items": [("Top", uri)]},
+             {"no": 2, "time": "10:05", "before": uri, "after": uri, "items": [("Dress", uri)]}]
+    assert moodboard_html(looks, "All").count('class="ck-look"') == 2
+    assert moodboard_html(looks, "Dresses").count('class="ck-look"') == 1
+    assert "No bottoms yet" in moodboard_html(looks, "Bottoms")
