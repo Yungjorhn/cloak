@@ -241,6 +241,15 @@ footer {{ opacity: .45; }}
 .ck-look-title {{ font-weight:700; font-size: 14px; color:{INK}; }}
 .ck-look-title span {{ display:block; font-weight:500; font-size:12px; color:{MUTED}; margin-top:2px; }}
 .ck-items {{ display:flex; gap:6px; }}
+.ck-dl {{ display:flex; gap:8px; padding: 10px 4px 2px; }}
+.ck-dl a {{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; padding: 9px 10px;
+           border-radius:999px; font-size:12.5px; font-weight:600; text-decoration:none !important;
+           border:1px solid {LINE}; color:{INK} !important; background:{PAPER}; transition: background .15s ease; }}
+.ck-dl a:hover {{ background:{LAVENDER}; }}
+.ck-dl a.main {{ background:{INK}; color:{PAPER} !important; border-color:{INK}; }}
+.ck-dl a.main:hover {{ background:{PURPLE}; border-color:{PURPLE}; }}
+.ck-dl svg {{ width:14px; height:14px; flex: none; }}
+.ck-dl a.main svg {{ stroke: {PAPER} !important; }}
 .ck-items img {{ width:38px; height:38px; object-fit:contain; background:{SOFT}; border:1px solid {LINE}; border-radius: 10px; }}
 .ck-empty {{ border:1.5px dashed #DCD2C6; border-radius: 22px; padding: 56px 24px; text-align:center; color:{MUTED};
             background: linear-gradient(140deg, rgba(248,207,234,.25), rgba(227,216,255,.35)); }}
@@ -346,8 +355,9 @@ HOW = """
     and which tops and bottoms work together. Everything except the clothes stays exactly as in your photo.</p></div>
   <div><h4><i></i>What it can't promise</h4><p>Size and real fabric fit. Cut and length follow the outfit
     in your photo, and loose native styles and accessories are less reliable.</p></div>
-  <div><h4><i></i>Your photos</h4><p>Processed in this session only and never stored. CLOAK is open
-    source and built on the open-weight Leffa model (MIT). Non-commercial research prototype.</p></div>
+  <div><h4><i></i>Your photos</h4><p>Used only to make your looks. Downloads are kept temporarily on the
+    machine running CLOAK and deleted when you clear the moodboard or the session ends. Open source, built on
+    the open-weight Leffa model (MIT). Non-commercial research prototype.</p></div>
 </section>
 """
 
@@ -371,7 +381,12 @@ def board_head(count):
             f'<span class="ck-count">{count} look{"s" if count != 1 else ""} saved</span></div>')
 
 
-def moodboard_html(looks, filter_name="All"):
+ICON_DOWN = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+             'stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>')
+
+
+def moodboard_html(looks, filter_name="All", file_url=None):
+    """file_url(path) turns a saved file into a link the browser can download."""
     wanted = FILTERS.get(filter_name)
     shown = [lk for lk in looks if wanted is None or any(lbl == wanted for lbl, _ in lk["items"])]
     if not looks:
@@ -394,6 +409,19 @@ def moodboard_html(looks, filter_name="All"):
   <div class="ck-look-foot">
     <div class="ck-look-title">Look {look['no']:02d}<span>{html.escape(names)} · {html.escape(look['time'])}</span></div>
     <div class="ck-items">{thumbs}</div>
-  </div>
+  </div>{_download_links(look, file_url)}
 </article>""")
     return '<div class="ck-board">' + "".join(cards) + "</div>"
+
+
+def _download_links(look, file_url):
+    files = look.get("files")
+    if not files or file_url is None:
+        return ""
+    look_name = html.escape(f"cloak-look-{look['no']:02d}.jpg")
+    pair_name = html.escape(f"cloak-look-{look['no']:02d}-before-after.jpg")
+    return (f'<div class="ck-dl">'
+            f'<a class="main" href="{html.escape(file_url(files["look"]))}" download="{look_name}">'
+            f'{ICON_DOWN}Download look</a>'
+            f'<a href="{html.escape(file_url(files["pair"]))}" download="{pair_name}">'
+            f'{ICON_DOWN}Before / After</a></div>')
