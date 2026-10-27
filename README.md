@@ -188,8 +188,8 @@ evaluation on Nigerian fashion photos.
 
 ## Team
 
-- _Favour (your surname)_, _University_
-- _Teammate name_, _University_
+- _Favour Akinyeye_, _Obafemi Awolowo University_
+- _Samuel Oluwatuyi_, _Obafemi Awolowo University_
 
 ## Licence
 
