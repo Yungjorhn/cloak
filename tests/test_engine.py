@@ -82,3 +82,36 @@ def test_moodboard_shows_before_and_after_for_each_look():
     assert page.count(">Before<") == 2 and page.count(">After<") == 2
     assert page.index("Look 02") < page.index("Look 01")  # newest first
     assert "Nothing pinned yet" in moodboard_html([])
+
+
+def test_portrait_frame_zooms_in_on_a_small_person_in_a_wide_photo():
+    from cloak.engine import portrait_frame
+    left, top, right, bottom = portrait_frame(4000, 3000, (1800, 900, 2200, 2700))
+    assert abs((right - left) / (bottom - top) - 0.75) < 0.01   # 3:4 like the model's canvas
+    assert left <= 1800 and right >= 2200 and top <= 900 and bottom >= 2700  # person inside
+    assert (right - left) < 4000 / 2                             # actually zoomed in
+    assert left >= 0 and top >= 0 and right <= 4000 and bottom <= 3000
+
+
+def test_portrait_frame_stays_inside_the_photo_at_the_edges():
+    from cloak.engine import portrait_frame
+    left, top, right, bottom = portrait_frame(1000, 800, (0, 0, 200, 800))
+    assert left >= 0 and top >= 0 and right <= 1000 and bottom <= 800
+
+
+def test_only_the_clothing_area_changes():
+    from cloak.engine import blend_clothing_only
+    original = Image.new("RGB", (600, 800), (10, 20, 30))
+    generated = Image.new("RGB", (300, 400), (250, 0, 0))
+    mask = Image.new("L", (300, 400), 0)
+    mask.paste(255, (100, 150, 200, 300))  # garment area in the middle
+    out = blend_clothing_only(original, generated, mask)
+    assert out.size == original.size
+    assert out.getpixel((5, 5)) == (10, 20, 30)          # far from the garment: untouched
+    assert out.getpixel((300, 450)) == (250, 0, 0)       # inside the garment: new clothing
+
+
+def test_result_keeps_the_original_photo_size(engine):
+    wide = Image.new("RGB", (1600, 900), (90, 90, 90))
+    out, _ = engine.dress_outfit(wide, top=garment())
+    assert out.size == (1600, 900)
