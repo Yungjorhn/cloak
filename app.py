@@ -10,12 +10,23 @@ import time
 
 import gradio as gr
 
+from cloak.downloads import LOOKS_DIR, delete_look_files, save_look_files
 from cloak.engine import CKPT_DIR, MOCK, TryOnEngine, load_image
 from cloak.ui_style import (CSS, FONTS_HEAD, HOW, board_head, build_theme, card_head,
                             header_html, moodboard_html, section_head, supported, to_data_uri)
 
 GR_MAJOR = int(gr.__version__.split(".")[0])
 QUALITY = {"Fast": 20, "Balanced": 30, "Best": 50}
+# Where Gradio serves files from (the route changed in Gradio 5).
+FILE_ROUTE = "/gradio_api/file=" if GR_MAJOR >= 5 else "/file="
+
+
+def file_url(path):
+    return FILE_ROUTE + str(path)
+
+
+def board(looks, board_filter="All"):
+    return moodboard_html(looks, board_filter, file_url)
 
 engine = None
 
@@ -73,12 +84,13 @@ def run_tryon(person, mode, top, bottom, dress, quality, seed, looks, board_filt
         "after": to_data_uri(result),
         "items": [(label, to_data_uri(load_image(img), 120)) for label, img in items],
     }
+    look["files"] = save_look_files(look["no"], load_image(person), result)
     looks = looks + [look]
     status = f"Look {look['no']:02d} ready · {time.time() - t0:.0f}s · " + " · ".join(log)
     if MOCK:
         status = "MOCK MODE, NOT A REAL TRY-ON · " + status
     return (result, looks, board_head(len(looks)),
-            moodboard_html(looks, board_filter), status)
+            board(looks, board_filter), status)
 
 
 def switch_mode(mode):
@@ -86,12 +98,13 @@ def switch_mode(mode):
     return gr.Column(visible=two_piece), gr.Column(visible=not two_piece)
 
 
-def clear_board():
-    return [], board_head(0), moodboard_html([])
+def clear_board(looks):
+    delete_look_files(looks)  # downloads are removed along with the moodboard
+    return [], board_head(0), board([])
 
 
 def filter_board(looks, board_filter):
-    return moodboard_html(looks, board_filter)
+    return board(looks, board_filter)
 
 
 def hero_images():
@@ -174,17 +187,17 @@ def build_ui():
                                     show_label=False, elem_classes=["ck-filters"], scale=4)
             clear = gr.Button("Clear moodboard", variant="secondary", size="sm", scale=1,
                               min_width=150)
-        board = H(moodboard_html([]))
+        board_html = H(board([]))
         H(HOW)
 
         mode.change(switch_mode, inputs=mode, outputs=[two_piece_col, dress_col])
         go.click(run_tryon,
                  inputs=[person, mode, top, bottom, dress, quality, seed, looks, board_filter],
-                 outputs=[result, looks, board_title, board, status],
+                 outputs=[result, looks, board_title, board_html, status],
                  # show the progress bar on the result panel only, not on every output
                  **supported(go.click, show_progress_on=[result]))
-        board_filter.change(filter_board, inputs=[looks, board_filter], outputs=board)
-        clear.click(clear_board, outputs=[looks, board_title, board])
+        board_filter.change(filter_board, inputs=[looks, board_filter], outputs=board_html)
+        clear.click(clear_board, inputs=looks, outputs=[looks, board_title, board_html])
 
     return demo, theme
 
@@ -199,7 +212,7 @@ if __name__ == "__main__":
         "share": os.environ.get("CLOAK_SHARE", "1") == "1",
         "server_name": "0.0.0.0",
         "server_port": int(os.environ.get("PORT", 7860)),
-        "allowed_paths": [str(CKPT_DIR / "examples")],
+        "allowed_paths": [str(CKPT_DIR / "examples"), str(LOOKS_DIR)],
     }
     if GR_MAJOR >= 6:
         launch_kwargs.update(theme=theme, css=CSS, head=FONTS_HEAD)

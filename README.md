@@ -34,7 +34,9 @@ style, colour or print looks on their own body, and which combination works, bef
 2. **The outfit:** add a top and/or a bottom, or a dress/gown. Screenshots from a vendor's page work
    once cropped to the item.
 3. **See yourself:** CLOAK dresses you in the full outfit.
-4. **Compare:** every look is pinned to your moodboard as a before-and-after pair, with the garments used, so you can compare combinations at a glance.
+4. **Compare and share:** every look is pinned to your moodboard as a before-and-after pair, with the
+   garments used. Filter by tops, bottoms or dresses, and download any look or a ready-to-share
+   before/after image.
 
 ## How it works
 
@@ -172,8 +174,10 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
 - **Research licences.** Some supporting models and the training datasets are licensed for
   non-commercial research only, so CLOAK is a non-commercial prototype. See
   [ACKNOWLEDGEMENTS.md](ACKNOWLEDGEMENTS.md).
-- **Privacy.** Photos are processed in memory for the session and not saved by CLOAK. A public
-  gradio.live link is temporary, but anyone with it can use your running app, so share it carefully.
+- **Privacy.** CLOAK keeps no database. Photos are used only to make your looks; the downloadable
+  files are written to a temporary folder (under random names) on the machine running the app and
+  deleted when you clear the moodboard or the session ends. A public gradio.live link is temporary,
+  but anyone with it can use your running app, so share it carefully.
 
 ## Next steps
 
@@ -189,6 +193,7 @@ cloak/
 ├── app.py                  # Gradio web app
 ├── cloak/engine.py         # try-on pipeline around Leffa
 ├── cloak/ui_style.py       # visual design: theme, CSS, moodboard
+├── cloak/downloads.py      # downloadable looks and before/after images
 ├── setup.sh                # installs libraries, fetches Leffa + checkpoints
 ├── requirements.txt
 ├── notebooks/CLOAK_Colab.ipynb
