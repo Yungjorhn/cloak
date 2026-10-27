@@ -12,8 +12,7 @@ Built for **OPEN//BUILD 2026** (OSCA Ile-Ife Hacktoberfest Challenge).
 - **Run it yourself (free, no install):** [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Yungjorhn/cloak/blob/main/notebooks/CLOAK_Colab.ipynb)  
   Click the button, set `Runtime > Change runtime type > T4 GPU`, then `Runtime > Run all`.
 
-> _Add a screenshot: `docs/screenshot.png`_
-
+  ![CLOAK](docs/screenshot.png.png)
 ---
 
 ## The problem
