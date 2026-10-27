@@ -57,6 +57,16 @@ For a full outfit, CLOAK runs this twice: **bottom first, then top**, feeding th
 the second, so the top's hem is drawn last and sits naturally over the waistband. A dress or gown
 replaces both in a single pass.
 
+  ## Results
+
+  | | |
+  |---|---|
+  | ![](docs/result-1.jpg) | ![](docs/result-2.jpg) | ![](docs/result-3.jpg) | ![](docs/result-4.jpg) | ![](docs/result-5.jpg) | 
+
+  What we learned from testing: colour, print, fabric and necklines transfer well, and
+  sleeves adapt. Length follows the outfit in your photo, so photos in a fitted or tucked-in
+  top give the best results. Full-length items need "Dress / gown" mode.
+
 ## The AI model and why we chose it
 
 **Main model: [Leffa](https://huggingface.co/franciszzj/Leffa)** (*Learning Flow Fields in Attention for
