@@ -150,6 +150,18 @@ footer {{ opacity: .35; }}
 .ck-examples button img {{ border-radius:2px; }}
 .ck-examples button:hover img {{ outline: 1px solid {ACCENT}; }}
 
+/* ---------- progress (on the result panel) ---------- */
+.progress-level-inner {{ font-family:'JetBrains Mono', monospace !important; font-size:11px !important;
+                        letter-spacing:.14em; text-transform:uppercase; color:{TEXT} !important;
+                        margin-bottom: 14px !important; }}
+.progress-bar-wrap {{ width: 72% !important; height: 3px !important; border:none !important;
+                     background: {LINE} !important; border-radius: 2px; overflow:hidden; }}
+.progress-bar {{ background: {ACCENT} !important; box-shadow: 0 0 14px {ACCENT};
+                transition: transform .35s ease, width .35s ease !important; }}
+.meta-text, .meta-text-center {{ font-family:'JetBrains Mono', monospace !important; font-size:11px !important;
+                                color:{MUTED} !important; letter-spacing:.08em; }}
+.eta-bar {{ background: rgba(212,255,79,.05) !important; }}
+
 /* ---------- moodboard ---------- */
 .ck-board-head {{ display:flex; align-items:end; justify-content:space-between;
                  padding: 64px 0 18px; border-bottom:1px solid {LINE}; margin-bottom: 22px; }}

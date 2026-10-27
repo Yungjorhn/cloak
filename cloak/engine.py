@@ -31,7 +31,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageOps
 
 WIDTH, HEIGHT = 768, 1024
 
@@ -88,6 +88,47 @@ def fit_to_canvas(img: Image.Image) -> tuple[Image.Image, Fit]:
 def crop_back(img: Image.Image, fit: Fit) -> Image.Image:
     """Remove the white padding so the result has the user's original framing."""
     return img.crop((fit.left, fit.top, fit.left + fit.width, fit.top + fit.height))
+
+
+def portrait_frame(img_w: int, img_h: int, box, margin: float = 0.08) -> tuple[int, int, int, int]:
+    """A 3:4 frame around a person's bounding box, kept inside the photo.
+
+    The model works on a 768x1024 portrait canvas. In a wide or distant photo
+    the person would be shrunk to a small part of that canvas, losing detail.
+    Cropping to the person first gives the model the full resolution.
+    """
+    x0, y0, x1, y1 = box
+    pad = margin * (y1 - y0)
+    x0, y0, x1, y1 = x0 - pad, y0 - pad, x1 + pad, y1 + pad
+    w, h = x1 - x0, y1 - y0
+    aspect = WIDTH / HEIGHT
+    if w / h < aspect:
+        w = h * aspect
+    else:
+        h = w / aspect
+    w, h = min(w, img_w), min(h, img_h)  # if the photo is too small, padding handles the rest
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    left = min(max(cx - w / 2, 0), img_w - w)
+    top = min(max(cy - h / 2, 0), img_h - h)
+    return int(round(left)), int(round(top)), int(round(left + w)), int(round(top + h))
+
+
+def blend_clothing_only(original: Image.Image, generated: Image.Image,
+                        mask: Image.Image) -> Image.Image:
+    """Take only the clothing area from the model; keep every other pixel original.
+
+    The diffusion model redraws the whole image through its compressor (VAE),
+    which slightly changes faces, hands and backgrounds. Blending with the
+    garment mask keeps the person exactly as photographed, at full resolution.
+    The mask is grown a little and softened so the seam isn't visible.
+    """
+    # Grow and soften at the model's own resolution (fast), then scale up.
+    feather = max(2, mask.height // 200)
+    mask = mask.convert("L").filter(ImageFilter.MaxFilter(2 * feather + 1))
+    mask = mask.filter(ImageFilter.GaussianBlur(feather))
+    mask = mask.resize(original.size, Image.BILINEAR)
+    generated = generated.resize(original.size, Image.LANCZOS)
+    return Image.composite(generated, original, mask)
 
 
 # --------------------------------------------------------------------------
@@ -204,11 +245,22 @@ class TryOnEngine:
         return self.model_dc, "dress_code"
 
     def dress_one(self, person: Image.Image, garment: Image.Image, garment_type: str,
-                  steps: int = 30, seed: int = 42, scale: float = 2.5) -> Image.Image:
-        """Put one garment on a 768x1024 person image. Returns a 768x1024 image."""
+                  steps: int = 30, seed: int = 42, scale: float = 2.5,
+                  on_step=None) -> tuple[Image.Image, Image.Image]:
+        """Put one garment on a 768x1024 person image.
+
+        Returns (generated 768x1024 image, mask of the area that was repainted).
+
+        on_step(done, total) is called after every diffusion step, so the
+        interface can show real progress instead of a frozen bar.
+        """
         assert garment_type in GARMENT_TYPES, garment_type
         garment_canvas, _ = fit_to_canvas(garment)
         if MOCK:
+            for k in range(int(steps)):  # imitate the model's step loop
+                time.sleep(float(os.environ.get("CLOAK_MOCK_STEP_SECONDS", "0.05")))
+                if on_step:
+                    on_step(k + 1, int(steps))
             return _mock_result(person, garment_canvas, garment_type)
 
         inference, model_type = self._pick_model(garment_type)
@@ -237,15 +289,33 @@ class TryOnEngine:
             "mask": [mask],
             "densepose": [densepose],
         })
-        out = inference(
-            data,
-            ref_acceleration=False,
-            num_inference_steps=int(steps),
-            guidance_scale=float(scale),
-            seed=int(seed),
-            repaint=False,
-        )
-        return out["generated_image"][0]
+        with _report_steps(on_step):
+            out = inference(
+                data,
+                ref_acceleration=False,
+                num_inference_steps=int(steps),
+                guidance_scale=float(scale),
+                seed=int(seed),
+                repaint=False,
+            )
+        return out["generated_image"][0], mask
+
+    def _person_frame(self, photo: Image.Image):
+        """Find the person in the photo and return a 3:4 frame around them."""
+        full = (0, 0, photo.width, photo.height)
+        if MOCK:
+            return full
+        canvas, fit = fit_to_canvas(photo)
+        parse, _ = self.parsing(canvas.resize((WIDTH // 2, HEIGHT // 2)))
+        ys, xs = np.nonzero(np.array(parse) > 0)  # 0 = background
+        if len(xs) < 500:  # nobody found; use the whole photo
+            return full
+        scale = fit.width / photo.width
+        to_photo_x = lambda x: (x * 2 - fit.left) / scale
+        to_photo_y = lambda y: (y * 2 - fit.top) / scale
+        box = (max(0, to_photo_x(xs.min())), max(0, to_photo_y(ys.min())),
+               min(photo.width, to_photo_x(xs.max() + 1)), min(photo.height, to_photo_y(ys.max() + 1)))
+        return portrait_frame(photo.width, photo.height, box)
 
     def dress_outfit(self, person, top=None, bottom=None, dress=None,
                      steps: int = 30, seed: int = 42, progress=None):
@@ -272,28 +342,96 @@ class TryOnEngine:
         if not plan:
             raise ValueError("Add at least one clothing item (a top, a bottom, or a dress).")
 
-        canvas, fit = fit_to_canvas(person)
+        # 1. Zoom in: crop a portrait frame around the person at full resolution.
+        frame = self._person_frame(person)
+        crop = person.crop(frame)
+        canvas, fit = fit_to_canvas(crop)
+        repainted = Image.new("L", (WIDTH, HEIGHT), 0)  # everything any garment touched
         log = []
+        n = len(plan)
         for i, (gtype, garment, label) in enumerate(plan):
+            prefix = f"Fitting the {label}" + (f" ({i + 1} of {n})" if n > 1 else "")
+
+            def on_step(done, total, i=i, prefix=prefix):
+                if progress is not None:
+                    # overall fraction across every garment in the outfit
+                    progress((i + done / total) / n, desc=f"{prefix} · step {done}/{total}")
+
             if progress is not None:
-                progress((i, len(plan)), desc=f"Fitting the {label}...")
+                progress(i / n, desc=f"{prefix} · reading body shape")
             t0 = time.time()
-            canvas = self.dress_one(canvas, garment, gtype, steps=steps, seed=seed)
+            generated, mask = self.dress_one(canvas, garment, gtype, steps=steps, seed=seed,
+                                             on_step=on_step)
+            # Keep untouched areas clean before the next garment goes on.
+            canvas = blend_clothing_only(canvas, generated, mask)
+            repainted = ImageChops.lighter(repainted, mask.convert("L"))
             log.append(f"{label}: {time.time() - t0:.1f}s")
-        return crop_back(canvas, fit), log
+
+        # 2. Put the result back into the original photo at its full resolution,
+        #    taking only the clothing area from the model.
+        dressed = blend_clothing_only(crop, crop_back(canvas, fit), crop_back(repainted, fit))
+        result = person.copy()
+        result.paste(dressed, frame[:2])
+        return result, log
+
+
+# --------------------------------------------------------------------------
+# Live progress from inside Leffa's step loop
+# --------------------------------------------------------------------------
+
+class _report_steps:
+    """Temporarily swap the progress bar Leffa's pipeline uses (tqdm) for one
+    that also calls on_step(done, total). Leffa's code itself is untouched."""
+
+    def __init__(self, on_step):
+        self.on_step = on_step
+
+    def __enter__(self):
+        if self.on_step is None:
+            return self
+        import types
+        import leffa.pipeline as pipeline_module
+        import tqdm as real_tqdm
+
+        on_step = self.on_step
+
+        class StepBar(real_tqdm.tqdm):
+            def update(self, n=1):
+                result = super().update(n)
+                self._cloak_done = getattr(self, "_cloak_done", 0) + (n or 0)
+                try:
+                    on_step(int(self._cloak_done), int(self.total or 0) or 1)
+                except Exception:
+                    pass  # progress display must never break a try-on
+                return result
+
+        self.module = pipeline_module
+        self.original = pipeline_module.tqdm
+        pipeline_module.tqdm = types.SimpleNamespace(tqdm=StepBar)
+        return self
+
+    def __exit__(self, *exc):
+        if self.on_step is not None:
+            self.module.tqdm = self.original
+        return False
 
 
 # --------------------------------------------------------------------------
 # Mock output for UI development without a GPU. Watermarked on purpose.
 # --------------------------------------------------------------------------
 
-def _mock_result(person: Image.Image, garment: Image.Image, garment_type: str) -> Image.Image:
+def _mock_result(person: Image.Image, garment: Image.Image, garment_type: str):
     out = person.copy()
+    mask = Image.new("L", out.size, 0)
     thumb = garment.copy()
     thumb.thumbnail((WIDTH // 3, HEIGHT // 3))
     y = {"upper_body": HEIGHT // 4, "lower_body": HEIGHT // 2, "dresses": HEIGHT // 4}[garment_type]
-    out.paste(thumb, ((WIDTH - thumb.width) // 2, y))
+    x = (WIDTH - thumb.width) // 2
+    out.paste(thumb, (x, y))
     d = ImageDraw.Draw(out)
     d.rectangle((0, 0, WIDTH, 60), fill=(200, 0, 0))
     d.text((20, 20), "MOCK MODE - NOT A REAL TRY-ON (UI testing only)", fill=(255, 255, 255))
-    return out
+    # The "repainted" area includes the warning banner so it always survives blending.
+    ImageDraw.Draw(mask).rectangle((x, y, x + thumb.width, y + thumb.height), fill=255)
+    ImageDraw.Draw(mask).rectangle((0, 0, WIDTH, 60), fill=255)
+    return out, mask
