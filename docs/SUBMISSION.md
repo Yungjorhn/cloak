@@ -20,7 +20,7 @@ Colab GPU.
 
 **GitHub repository:** github.com/Yungjorhn/cloak
 
-**Working demonstration:** ___ (demo video link) and the Colab notebook in the repo for running it live.
+**Working demonstration:** (https://drive.google.com/drive/folders/1JEB_axRbhCDVkyE2YizFVtCt0V-WmF1Z) 
 
 **Model information:**
 Leffa (CVPR 2025, MIT licence, huggingface.co/franciszzj/Leffa), a diffusion-based virtual try-on
