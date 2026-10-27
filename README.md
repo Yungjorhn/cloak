@@ -69,8 +69,7 @@ reduces distortion of fine details such as text, logos, stripes and prints.
 
 Why it suits CLOAK:
 
-- **Detail preservation matters for our users.** Ankara, adire and lace are defined by their patterns.
-  A model that smears prints would be useless for the clothes our users actually buy.
+- **Detail preservation matters for our users.** A model that smears prints would be useless for the clothes our users actually buy.
 - **It covers full outfits.** Two released checkpoints: one trained on VITON-HD (tops, sharpest results)
   and one trained on DressCode (tops, bottoms and dresses). CLOAK routes each garment to the right one.
 - **Clear licence.** Leffa's code and weights are MIT. A popular alternative, IDM-VTON, releases its
