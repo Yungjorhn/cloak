@@ -70,3 +70,15 @@ def test_needs_a_person(engine):
 def test_needs_a_garment(engine):
     with pytest.raises(ValueError, match="at least one clothing item"):
         engine.dress_outfit(person())
+
+
+def test_moodboard_shows_before_and_after_for_each_look():
+    from cloak.ui_style import moodboard_html, to_data_uri
+    uri = to_data_uri(person())
+    looks = [{"no": i, "time": "10:00", "before": uri, "after": uri,
+              "items": [("Top", to_data_uri(garment(), 120))]} for i in (1, 2)]
+    page = moodboard_html(looks)
+    assert page.count('class="ck-card"') == 2
+    assert page.count(">Before<") == 2 and page.count(">After<") == 2
+    assert page.index("Look 02") < page.index("Look 01")  # newest first
+    assert "Nothing pinned yet" in moodboard_html([])

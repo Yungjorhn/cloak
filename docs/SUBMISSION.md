@@ -17,7 +17,7 @@ wrong purchase is wasted money.
 CLOAK is an open-source virtual fitting room. The user uploads a photo of themselves and photos of a
 top and/or bottom, or a dress, for example cropped screenshots from a vendor's page. An open-weight
 try-on model generates an image of the user wearing the full outfit. Every look is saved to a
-lookbook so the user can compare combinations side by side before buying. It runs on a free Google
+moodboard that shows each new look next to the original photo, so the user can compare combinations before buying. It runs on a free Google
 Colab GPU.
 
 **GitHub repository:** https://github.com/___/cloak

@@ -4,7 +4,7 @@
 
 CLOAK is an open-source virtual fitting room. Upload a photo of yourself and a photo of a top, trousers,
 skirt or dress, and an open-weight AI model shows you wearing it. Try different combinations and compare
-them side by side in your lookbook before you pay.
+them on your moodboard, each new look next to the photo you started from, before you pay.
 
 Built for **OPEN//BUILD 2026** (OSCA Ile-Ife Hacktoberfest Challenge).
 
@@ -34,7 +34,7 @@ style, colour or print looks on their own body, and which combination works, bef
 2. **The outfit:** add a top and/or a bottom, or a dress/gown. Screenshots from a vendor's page work
    once cropped to the item.
 3. **See yourself:** CLOAK dresses you in the full outfit.
-4. **Compare:** every look is saved to your lookbook so you can compare combinations side by side.
+4. **Compare:** every look is pinned to your moodboard as a before-and-after pair, with the garments used, so you can compare combinations at a glance.
 
 ## How it works
 
@@ -123,6 +123,10 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
 
 - **Gradio for the interface.** It gives a working web app with webcam upload, a public share link and
   a queue in a few hundred lines of Python, which kept our 5-day effort on the AI pipeline.
+- **A custom design on top of Gradio.** A fashion-editorial look (serif display type, generous space)
+  on a sleek dark interface (monospace labels, one lime accent), defined in `cloak/ui_style.py`. It
+  adapts to Gradio's version and to phone screens. The moodboard is rendered as HTML so each look can
+  show the original photo and the new look side by side.
 - **Memory-safe loading for free Colab.** Each Leffa model has about 1.8 billion parameters. Built the
   default way (float32 first, then converted), one model needs over 7 GB of RAM before its weights load,
   enough to crash a free Colab session. CLOAK creates the model directly in float16 and reads weights
@@ -167,6 +171,7 @@ the outfit logic in mock mode, so they run on any laptop without a GPU.
 cloak/
 ├── app.py                  # Gradio web app
 ├── cloak/engine.py         # try-on pipeline around Leffa
+├── cloak/ui_style.py       # visual design: theme, CSS, moodboard
 ├── setup.sh                # installs libraries, fetches Leffa + checkpoints
 ├── requirements.txt
 ├── notebooks/CLOAK_Colab.ipynb
@@ -183,8 +188,8 @@ evaluation on Nigerian fashion photos.
 
 ## Team
 
-- _Ikeoluwapo Favour Akinyeye_, _Obafemi Awolowo University_
-- _Samuel Iyanuoluwa Oluwatuyi_, _Obafemi Awolowo University_
+- _Favour (your surname)_, _University_
+- _Teammate name_, _University_
 
 ## Licence
 
