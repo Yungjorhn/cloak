@@ -110,7 +110,7 @@ First run: about 5 to 10 minutes (downloads a few GB of weights). Each garment t
 ### Option B: your own machine (NVIDIA GPU, 12 GB+ VRAM)
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/cloak.git
+git clone https://github.com/Yungjorhn/cloak.git
 cd cloak
 # install a CUDA build of PyTorch first: https://pytorch.org/get-started/locally/
 bash setup.sh
